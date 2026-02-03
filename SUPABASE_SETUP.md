@@ -25,20 +25,24 @@ create index if not exists purchases_date_idx on purchases(date desc);
 create index if not exists products_name_idx on products(name);
 ```
 
-## RLS (optionnel pour dev)
+## RLS (Row Level Security) - OBLIGATOIRE
 ```sql
+-- Activer RLS sur les tables
 alter table products enable row level security;
 alter table purchases enable row level security;
 
-create policy "public read products" on products
+-- Policies pour accès public (mode dev/demo)
+create policy "Lecture publique products" on products
   for select using (true);
 
-create policy "public write products" on products
+create policy "Insertion publique products" on products
   for insert with check (true);
 
-create policy "public read purchases" on purchases
+create policy "Lecture publique purchases" on purchases
   for select using (true);
 
-create policy "public write purchases" on purchases
+create policy "Insertion publique purchases" on purchases
   for insert with check (true);
 ```
+
+**Note :** Pour production, remplacer `true` par des conditions basées sur `auth.uid()` pour sécuriser l'accès par utilisateur.

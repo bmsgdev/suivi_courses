@@ -145,11 +145,15 @@ export const usePurchases = () => {
     }
 
     try {
-      const { data: product } = await supabase
+      const { data: product, error: selectError } = await supabase
         .from('products')
         .select('id')
         .eq('name', productName)
-        .single()
+        .maybeSingle()
+
+      if (selectError) {
+        console.warn('Error checking product:', selectError)
+      }
 
       if (!product) {
         console.warn('Product not found in Supabase, fallback to localStorage')
