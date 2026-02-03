@@ -64,20 +64,25 @@ export const useProducts = () => {
 
     try {
       // Vérifier si le produit existe déjà
-      const { data: existing } = await supabase
+      const { data: existing, error: selectError } = await supabase
         .from('products')
         .select('id')
         .eq('name', name)
         .maybeSingle()
 
+      if (selectError) {
+        console.error('Error checking existing product:', selectError)
+      }
+
       if (existing) {
-        console.info('Product already exists:', name)
+        console.info('✅ Product already exists:', name, 'ID:', existing.id)
         setProducts(prev => [...new Set([...prev, name])])
         setLocal(prev => [...new Set([...prev, name])])
         return { success: true, productId: existing.id }
       }
 
       // Créer le produit s'il n'existe pas
+      console.info('🔄 Creating new product:', name)
       const { data, error } = await supabase
         .from('products')
         .insert([{ name }])
@@ -85,17 +90,19 @@ export const useProducts = () => {
         .single()
 
       if (error) {
-        console.warn('Supabase insert failed, using localStorage:', error)
+        console.error('❌ Supabase insert failed:', error)
+        console.error('Error details:', JSON.stringify(error, null, 2))
         setProducts(prev => [...prev, name])
         setLocal(prev => [...prev, name])
         return { success: true, productId: null }
       }
       
+      console.info('✅ Product created:', data)
       setProducts(prev => [...prev, name])
       setLocal(prev => [...prev, name])
       return { success: true, productId: data.id }
     } catch (err) {
-      console.error('Supabase error, fallback to localStorage:', err)
+      console.error('❌ Supabase error, fallback to localStorage:', err)
       setProducts(prev => [...prev, name])
       setLocal(prev => [...prev, name])
       return { success: true, productId: null }
