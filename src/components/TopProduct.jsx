@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { getTopProduct, filterPurchasesByPeriod, filterPurchasesByCustomDates } from '../utils/topProduct'
 
 const PRESETS = [
   { label: '7 jours', days: 7 },
@@ -13,46 +14,26 @@ export default function TopProduct({ purchases }) {
   const [useCustom, setUseCustom] = useState(false)
 
   const { topProduct, count, filteredPurchases, period } = useMemo(() => {
-    const now = new Date()
     let filtered = []
     let periodLabel = ''
 
     if (useCustom && customStart && customEnd) {
-      const start = new Date(customStart)
-      const end = new Date(customEnd)
-      filtered = purchases.filter(p => {
-        const date = new Date(p.date)
-        return date >= start && date <= end
-      })
+      filtered = filterPurchasesByCustomDates(purchases, customStart, customEnd)
       periodLabel = `${new Date(customStart).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${new Date(customEnd).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`
     } else {
-      const daysAgo = new Date(now.getTime() - preset * 24 * 60 * 60 * 1000)
-      filtered = purchases.filter(p => new Date(p.date) >= daysAgo)
+      filtered = filterPurchasesByPeriod(purchases, preset)
       const presetObj = PRESETS.find(p => p.days === preset)
       periodLabel = presetObj ? presetObj.label : `${preset} jours`
     }
 
-    const productCounts = filtered.reduce((acc, p) => {
-      acc[p.name] = acc[p.name] || { count: 0, lastDate: p.date }
-      acc[p.name].count++
-      if (new Date(p.date) > new Date(acc[p.name].lastDate)) {
-        acc[p.name].lastDate = p.date
-      }
-      return acc
-    }, {})
-
-    const sorted = Object.entries(productCounts).sort((a, b) => {
-      if (b[1].count !== a[1].count) {
-        return b[1].count - a[1].count
-      }
-      return new Date(b[1].lastDate) - new Date(a[1].lastDate)
-    })
-
-    const top = sorted[0]
+    // Extraire les noms de produits pour getTopProduct
+    const productNames = filtered.map(p => p.name)
+    const top = getTopProduct(productNames)
+    const topCount = filtered.filter(p => p.name === top).length
 
     return {
-      topProduct: top ? top[0] : null,
-      count: top ? top[1].count : 0,
+      topProduct: top,
+      count: topCount,
       filteredPurchases: filtered,
       period: periodLabel
     }
