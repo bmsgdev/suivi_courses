@@ -45,8 +45,6 @@ export default function AddPurchase({ products, onSubmit }) {
       (product) => product.toLowerCase() === trimmedName.toLowerCase(),
     )
 
-    console.log('🔍 Product check:', { trimmedName, existingProduct, allProducts: products })
-
     const result = await onSubmit({
       name: existingProduct ?? trimmedName,
       price: priceValue,
