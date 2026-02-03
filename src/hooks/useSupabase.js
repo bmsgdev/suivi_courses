@@ -24,19 +24,30 @@ export const useProducts = () => {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!supabase) return
+    if (!supabase) {
+      setProducts(local)
+      return
+    }
 
     const fetchProducts = async () => {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('name')
-      
-      if (!error && data) {
-        const names = data.map(p => p.name)
-        setProducts(names)
-        setLocal(names)
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('name')
+        
+        if (!error && data) {
+          const names = data.map(p => p.name)
+          setProducts(names)
+          setLocal(names)
+        } else {
+          console.warn('Supabase products fetch failed, using localStorage:', error)
+          setProducts(local)
+        }
+      } catch (err) {
+        console.error('Supabase connection error:', err)
+        setProducts(local)
       }
       setLoading(false)
     }
@@ -51,16 +62,28 @@ export const useProducts = () => {
       return { success: true }
     }
 
-    const { data, error } = await supabase
-      .from('products')
-      .insert([{ name }])
-      .select()
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .insert([{ name }])
+        .select()
 
-    if (error) return { success: false, error }
-    
-    setProducts(prev => [...prev, name])
-    setLocal(prev => [...prev, name])
-    return { success: true, data }
+      if (error) {
+        console.warn('Supabase insert failed, using localStorage:', error)
+        setProducts(prev => [...prev, name])
+        setLocal(prev => [...prev, name])
+        return { success: true }
+      }
+      
+      setProducts(prev => [...prev, name])
+      setLocal(prev => [...prev, name])
+      return { success: true, data }
+    } catch (err) {
+      console.error('Supabase error, fallback to localStorage:', err)
+      setProducts(prev => [...prev, name])
+      setLocal(prev => [...prev, name])
+      return { success: true }
+    }
   }
 
   return { products, addProduct, loading }
@@ -72,24 +95,35 @@ export const usePurchases = () => {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!supabase) return
+    if (!supabase) {
+      setPurchases(local)
+      return
+    }
 
     const fetchPurchases = async () => {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('purchases')
-        .select('id, price, date, products(name)')
-        .order('date', { ascending: false })
-      
-      if (!error && data) {
-        const mapped = data.map(p => ({
-          id: p.id,
-          name: p.products.name,
-          price: p.price,
-          date: p.date
-        }))
-        setPurchases(mapped)
-        setLocal(mapped)
+      try {
+        const { data, error } = await supabase
+          .from('purchases')
+          .select('id, price, date, products(name)')
+          .order('date', { ascending: false })
+        
+        if (!error && data) {
+          const mapped = data.map(p => ({
+            id: p.id,
+            name: p.products.name,
+            price: Number(p.price),
+            date: p.date
+          }))
+          setPurchases(mapped)
+          setLocal(mapped)
+        } else {
+          console.warn('Supabase purchases fetch failed, using localStorage:', error)
+          setPurchases(local)
+        }
+      } catch (err) {
+        console.error('Supabase connection error:', err)
+        setPurchases(local)
       }
       setLoading(false)
     }
@@ -102,7 +136,7 @@ export const usePurchases = () => {
       const newPurchase = {
         id: crypto.randomUUID(),
         name: productName,
-        price,
+        price: Number(price),
         date
       }
       setPurchases(prev => [newPurchase, ...prev])
@@ -110,32 +144,67 @@ export const usePurchases = () => {
       return { success: true }
     }
 
-    const { data: product } = await supabase
-      .from('products')
-      .select('id')
-      .eq('name', productName)
-      .single()
+    try {
+      const { data: product } = await supabase
+        .from('products')
+        .select('id')
+        .eq('name', productName)
+        .single()
 
-    if (!product) return { success: false, error: 'Product not found' }
+      if (!product) {
+        console.warn('Product not found in Supabase, fallback to localStorage')
+        const newPurchase = {
+          id: crypto.randomUUID(),
+          name: productName,
+          price: Number(price),
+          date
+        }
+        setPurchases(prev => [newPurchase, ...prev])
+        setLocal(prev => [newPurchase, ...prev])
+        return { success: true }
+      }
 
-    const { data, error } = await supabase
-      .from('purchases')
-      .insert([{ product_id: product.id, price, date }])
-      .select('id, price, date, products(name)')
-      .single()
+      const { data, error } = await supabase
+        .from('purchases')
+        .insert([{ product_id: product.id, price, date }])
+        .select('id, price, date, products(name)')
+        .single()
 
-    if (error) return { success: false, error }
+      if (error) {
+        console.warn('Supabase insert failed, using localStorage:', error)
+        const newPurchase = {
+          id: crypto.randomUUID(),
+          name: productName,
+          price: Number(price),
+          date
+        }
+        setPurchases(prev => [newPurchase, ...prev])
+        setLocal(prev => [newPurchase, ...prev])
+        return { success: true }
+      }
 
-    const newPurchase = {
-      id: data.id,
-      name: data.products.name,
-      price: data.price,
-      date: data.date
+      const newPurchase = {
+        id: data.id,
+        name: data.products.name,
+        price: Number(data.price),
+        date: data.date
+      }
+      
+      setPurchases(prev => [newPurchase, ...prev])
+      setLocal(prev => [newPurchase, ...prev])
+      return { success: true, data: newPurchase }
+    } catch (err) {
+      console.error('Supabase error, fallback to localStorage:', err)
+      const newPurchase = {
+        id: crypto.randomUUID(),
+        name: productName,
+        price: Number(price),
+        date
+      }
+      setPurchases(prev => [newPurchase, ...prev])
+      setLocal(prev => [newPurchase, ...prev])
+      return { success: true }
     }
-    
-    setPurchases(prev => [newPurchase, ...prev])
-    setLocal(prev => [newPurchase, ...prev])
-    return { success: true, data: newPurchase }
   }
 
   return { purchases, addPurchase, loading }
