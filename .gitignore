@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+SUPABASE_SETUP.md
+SUPABASE_RLS_FIX.md
