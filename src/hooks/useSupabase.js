@@ -59,30 +59,46 @@ export const useProducts = () => {
     if (!supabase) {
       setProducts(prev => [...prev, name])
       setLocal(prev => [...prev, name])
-      return { success: true }
+      return { success: true, productId: null }
     }
 
     try {
+      // Vérifier si le produit existe déjà
+      const { data: existing } = await supabase
+        .from('products')
+        .select('id')
+        .eq('name', name)
+        .maybeSingle()
+
+      if (existing) {
+        console.info('Product already exists:', name)
+        setProducts(prev => [...new Set([...prev, name])])
+        setLocal(prev => [...new Set([...prev, name])])
+        return { success: true, productId: existing.id }
+      }
+
+      // Créer le produit s'il n'existe pas
       const { data, error } = await supabase
         .from('products')
         .insert([{ name }])
         .select()
+        .single()
 
       if (error) {
         console.warn('Supabase insert failed, using localStorage:', error)
         setProducts(prev => [...prev, name])
         setLocal(prev => [...prev, name])
-        return { success: true }
+        return { success: true, productId: null }
       }
       
       setProducts(prev => [...prev, name])
       setLocal(prev => [...prev, name])
-      return { success: true, data }
+      return { success: true, productId: data.id }
     } catch (err) {
       console.error('Supabase error, fallback to localStorage:', err)
       setProducts(prev => [...prev, name])
       setLocal(prev => [...prev, name])
-      return { success: true }
+      return { success: true, productId: null }
     }
   }
 

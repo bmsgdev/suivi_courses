@@ -21,7 +21,10 @@ function App() {
 
   const handleAddPurchase = async ({ name, price, date, isNewProduct }) => {
     if (isNewProduct) {
-      await addProduct(name)
+      const result = await addProduct(name)
+      if (!result.success) {
+        return { success: false, error: 'Failed to create product' }
+      }
     }
     return await addPurchase(name, price, date)
   }
