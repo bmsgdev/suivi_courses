@@ -20,23 +20,16 @@ function App() {
   }, [products])
 
   const handleAddPurchase = async ({ name, price, date, isNewProduct }) => {
-    console.log('📝 handleAddPurchase called:', { name, isNewProduct })
-    
     if (isNewProduct) {
-      console.log('🔄 Creating new product:', name)
       const result = await addProduct(name)
-      console.log('📊 addProduct result:', result)
       
       if (!result.success) {
-        console.error('❌ Failed to create product')
         return { success: false, error: 'Failed to create product' }
       }
       
-      // Petit délai pour s'assurer que le produit est bien en base
       await new Promise(resolve => setTimeout(resolve, 500))
     }
     
-    console.log('🛒 Creating purchase for:', name)
     return await addPurchase(name, price, date)
   }
 
