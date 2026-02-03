@@ -11,25 +11,39 @@ alter table purchases enable row level security;
 
 ## Étape 2 : Créer les policies d'accès public
 ```sql
--- Policy SELECT pour products
+-- Policies complètes pour products
 create policy "Lecture publique products" 
 on products for select 
 using (true);
 
--- Policy INSERT pour products
 create policy "Insertion publique products" 
 on products for insert 
 with check (true);
 
--- Policy SELECT pour purchases
+create policy "Modification publique products" 
+on products for update 
+using (true) with check (true);
+
+create policy "Suppression publique products" 
+on products for delete 
+using (true);
+
+-- Policies complètes pour purchases
 create policy "Lecture publique purchases" 
 on purchases for select 
 using (true);
 
--- Policy INSERT pour purchases
 create policy "Insertion publique purchases" 
 on purchases for insert 
 with check (true);
+
+create policy "Modification publique purchases" 
+on purchases for update 
+using (true) with check (true);
+
+create policy "Suppression publique purchases" 
+on purchases for delete 
+using (true);
 ```
 
 ## Étape 3 : Vérifier les policies

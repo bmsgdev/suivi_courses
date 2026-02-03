@@ -31,18 +31,31 @@ create index if not exists products_name_idx on products(name);
 alter table products enable row level security;
 alter table purchases enable row level security;
 
--- Policies pour accès public (mode dev/demo)
+-- Policies complètes pour products (mode dev/demo)
 create policy "Lecture publique products" on products
   for select using (true);
 
 create policy "Insertion publique products" on products
   for insert with check (true);
 
+create policy "Modification publique products" on products
+  for update using (true) with check (true);
+
+create policy "Suppression publique products" on products
+  for delete using (true);
+
+-- Policies complètes pour purchases (mode dev/demo)
 create policy "Lecture publique purchases" on purchases
   for select using (true);
 
 create policy "Insertion publique purchases" on purchases
   for insert with check (true);
+
+create policy "Modification publique purchases" on purchases
+  for update using (true) with check (true);
+
+create policy "Suppression publique purchases" on purchases
+  for delete using (true);
 ```
 
 **Note :** Pour production, remplacer `true` par des conditions basées sur `auth.uid()` pour sécuriser l'accès par utilisateur.
