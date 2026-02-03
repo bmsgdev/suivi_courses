@@ -3,6 +3,7 @@ import { useProducts, usePurchases } from './hooks/useSupabase'
 import AddPurchase from './components/AddPurchase'
 import HistoryList from './components/HistoryList'
 import FinancialSummary from './components/FinancialSummary'
+import TopProduct from './components/TopProduct'
 
 const DEFAULT_PRODUCTS = [
   'Lait', 'Pain', 'Oeufs', 'Tomates', 'Pâtes', 'Fromage', 'Poulet', 'Pommes',
@@ -50,6 +51,16 @@ function App() {
               }`}
             >
               Historique
+            </button>
+            <button
+              onClick={() => setView('top')}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                view === 'top'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Top Produit
             </button>
             <button
               onClick={() => setView('financial')}
@@ -117,6 +128,10 @@ function App() {
               </p>
             </div>
             <HistoryList purchases={purchases} loading={loading} />
+          </section>
+        ) : view === 'top' ? (
+          <section>
+            <TopProduct purchases={purchases} />
           </section>
         ) : (
           <section>
