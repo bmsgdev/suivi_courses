@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useProducts, usePurchases } from './hooks/useSupabase'
 import AddPurchase from './components/AddPurchase'
 import HistoryList from './components/HistoryList'
+import FinancialSummary from './components/FinancialSummary'
 
 const DEFAULT_PRODUCTS = [
   'Lait', 'Pain', 'Oeufs', 'Tomates', 'Pâtes', 'Fromage', 'Poulet', 'Pommes',
@@ -50,6 +51,16 @@ function App() {
             >
               Historique
             </button>
+            <button
+              onClick={() => setView('financial')}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                view === 'financial'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Bilan Financier
+            </button>
           </div>
         </div>
       </header>
@@ -97,7 +108,7 @@ function App() {
               </div>
             </aside>
           </section>
-        ) : (
+        ) : view === 'history' ? (
           <section>
             <div className="mb-6">
               <h2 className="text-2xl font-semibold">Historique des courses</h2>
@@ -106,6 +117,10 @@ function App() {
               </p>
             </div>
             <HistoryList purchases={purchases} loading={loading} />
+          </section>
+        ) : (
+          <section>
+            <FinancialSummary purchases={purchases} />
           </section>
         )}
       </main>
